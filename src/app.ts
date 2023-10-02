@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import userRoutes from './routes/userRoutes';
 import * as admin from 'firebase-admin';
+import productRoutes from './routes/productRoutes';
 
 const serviceAccount = require('./../../KEYBORSA/key.json');
 
@@ -19,6 +20,7 @@ app.use(bodyParser.json());
 
 // Routes
 app.use('/api/user', userRoutes);
+app.use('/api/product', productRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
