@@ -67,6 +67,27 @@ class UserController {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+
+  public async getAllUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const usersQuerySnapshot = await admin.firestore()
+        .collection('users')
+        .get();
+
+      const usersData: any[] = [];
+  
+      usersQuerySnapshot.forEach((userDoc) => {
+        const userData = userDoc.data();
+        const userId = userDoc.id;
+        usersData.push({ userId, ...userData });
+      });
+  
+      res.status(200).json(usersData);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }  
 }
 
 export default new UserController();
