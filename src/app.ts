@@ -7,14 +7,11 @@ import * as admin from 'firebase-admin';
 const serviceAccount = require('./../../KEYBORSA/key.json');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    // Other Firebase configurations like databaseURL if needed
   });
-
-const db = admin.firestore();
 
 // Middleware
 app.use(cors());
