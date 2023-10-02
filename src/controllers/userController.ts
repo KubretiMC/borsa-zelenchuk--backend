@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as admin from 'firebase-admin';
 
 class UserController {
-  public async getRegistration(req: Request, res: Response): Promise<void> {
+  public async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { username, password, phoneNumber } = req.body;
 
@@ -12,7 +12,7 @@ class UserController {
         .get();
 
       if (!userQuerySnapshot.empty) {
-        res.status(400).json({ error: 'Username already exists' });
+        res.status(400).json({ error: 'Потребителското име вече съществува!' });
         return;
       }
 
@@ -31,6 +31,36 @@ class UserController {
         username: userData?.username,
         password: userData?.password,
         phoneNumber: userData?.phoneNumber,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  public async loginUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { username, password } = req.body;
+
+      const userQuerySnapshot = await admin.firestore()
+        .collection('users')
+        .where('username', '==', username)
+        .where('password', '==', password)
+        .get();
+
+      if (userQuerySnapshot.empty) {
+        res.status(400).json({ error: 'Грешно потребителско име или парола!' });
+        return;
+      }
+
+      const userDoc = userQuerySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      res.status(200).json({
+        userId: userDoc.id,
+        username: userData.username,
+        password: userData.password,
+        phoneNumber: userData.phoneNumber,
       });
     } catch (error) {
       console.error(error);
