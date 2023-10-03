@@ -27,7 +27,7 @@ class UserController {
       const userData = userDoc.data();
 
       res.status(201).json({
-        userId,
+        id: userId,
         username: userData?.username,
         password: userData?.password,
         phoneNumber: userData?.phoneNumber,
@@ -57,10 +57,11 @@ class UserController {
       const userData = userDoc.data();
 
       res.status(200).json({
-        userId: userDoc.id,
+        id: userDoc.id,
         username: userData.username,
         password: userData.password,
         phoneNumber: userData.phoneNumber,
+        offers: userData.offers
       });
     } catch (error) {
       console.error(error);
@@ -79,7 +80,7 @@ class UserController {
       usersQuerySnapshot.forEach((userDoc) => {
         const userData = userDoc.data();
         const userId = userDoc.id;
-        usersData.push({ userId, ...userData });
+        usersData.push({ id: userId, ...userData });
       });
   
       res.status(200).json(usersData);
