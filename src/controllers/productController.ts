@@ -113,20 +113,14 @@ class ProductController {
       }
   
       const userData = userDoc.data();
-      const updatedReservedProducts = userData?.reservedProducts ? [...userData.reservedProducts, productId] : [productId];
+      const updatedReservedProducts = userData?.userReserved ? [...userData.userReserved, productId] : [productId];
   
-      await userRef.update({ reservedProducts: updatedReservedProducts });
+      await userRef.update({ userReserved: updatedReservedProducts });
   
       // Fetch the updated user data
       const updatedUserSnapshot = await userRef.get();
       const updatedUserData = updatedUserSnapshot.data();
-  
-      console.log('updatedProductData', updatedProductData);
-      console.log('updatedUserData', updatedUserData);
-  
 
-      console.log('updatedAvailability', updatedAvailability);
-      console.log('minimumOrder', minimumOrder);
       // if the new availability is more than the minimum order, we create a new product that can be reserved by the users
       if (updatedAvailability > minimumOrder) {
         const newProductId = admin.firestore().collection('products').doc().id;
@@ -142,19 +136,22 @@ class ProductController {
           dateAdded: formattedDate,
         };
         await admin.firestore().collection('products').doc(newProductId).set(newProductData);
-        console.log('newProductData', newProductData);
-        res.status(200).json({
-          message: 'Продуктът е резервиран успешно и създаден нов продукт!',
-          updatedProduct: updatedProductData,
-          updatedUser: updatedUserData,
-          newProduct: newProductData,
-        });
+
+        // Find the user who has the original productId in their offers
+        const usersCollection = admin.firestore().collection('users');
+        const query = usersCollection.where('offers', 'array-contains', productId);
+        const querySnapshot = await query.get();
+
+        if (!querySnapshot.empty) {
+          const userWithOriginalProduct = querySnapshot.docs[0].data();
+
+          // Update the user and add the new product to their offers
+          const updatedUserOffers = [...userWithOriginalProduct.offers, newProductId];
+          await admin.firestore().collection('users').doc(querySnapshot.docs[0].id).update({ offers: updatedUserOffers });
+        }  
+        res.status(200).json({ message: 'Продуктът е резервиран успешно и създаден нов продукт!' });
       } else {
-        res.status(200).json({
-          message: 'Продуктът е резервиран успешно!',
-          updatedProduct: updatedProductData,
-          updatedUser: updatedUserData,
-        });
+        res.status(200).json({ message: 'Продуктът е резервиран успешно!' });
       }
     } catch (error) {
       console.error(error);
