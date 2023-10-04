@@ -13,7 +13,7 @@ class ProductController {
       productsQuerySnapshot.forEach((productDoc) => {
         const product = productDoc.data();
         const productId = productDoc.id;
-        productsData.push({ productId, ...product });
+        productsData.push({ id: productId, ...product });
       });
 
       res.status(200).json(productsData);
@@ -62,12 +62,104 @@ class ProductController {
         const updatedOffers = userData?.offers ? [...userData.offers, productId] : [productId];
         await userRef.update({ offers: updatedOffers });
       }
-      res.status(201).json({ productId });
+      res.status(201).json({ id: productId });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+
+  public async reserveProduct(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId, productId, orderQuantity, minimumOrder, reservedCost } = req.body;
+  
+      // Fetch the product to check availability
+      const productRef = admin.firestore().collection('products').doc(productId);
+      const productDoc = await productRef.get();
+  
+      if (!productDoc.exists) {
+        res.status(404).json({ error: 'Продуктът не е намерен!' });
+        return;
+      }
+  
+      const productData = productDoc.data();
+  
+      if (!productData || productData.reserved) {
+        res.status(400).json({ error: 'Продуктът не е достъпен за резервация!' });
+        return;
+      }
+  
+      const currentAvailability = productData.availability;
+  
+      // Update the product's availability and mark it as reserved
+      const updatedAvailability = currentAvailability - orderQuantity;
+      await productRef.update({
+        availability: 0,
+        reserved: true,
+        reservedCost: parseFloat(reservedCost),
+      });
+  
+      // Fetch the updated product data
+      const updatedProductSnapshot = await productRef.get();
+      const updatedProductData = updatedProductSnapshot.data();
+  
+      // Update the user's reserved products
+      const userRef = admin.firestore().collection('users').doc(userId);
+      const userDoc = await userRef.get();
+  
+      if (!userDoc.exists) {
+        res.status(404).json({ error: 'Потребителят не е намерен!' });
+        return;
+      }
+  
+      const userData = userDoc.data();
+      const updatedReservedProducts = userData?.userReserved ? [...userData.userReserved, productId] : [productId];
+  
+      await userRef.update({ userReserved: updatedReservedProducts });
+  
+      // Fetch the updated user data
+      const updatedUserSnapshot = await userRef.get();
+      const updatedUserData = updatedUserSnapshot.data();
+
+      // if the new availability is more than the minimum order, we create a new product that can be reserved by the users
+      if (updatedAvailability > minimumOrder) {
+        const newProductId = admin.firestore().collection('products').doc().id;
+
+        const currentDate = new Date();
+        const formattedDate = `${currentDate.getDate()}.${currentDate.toLocaleString('default', { month: 'short' })}`;
+
+        const newProductData = {
+          ...productData,
+          id: newProductId,
+          reserved: false,
+          availability: updatedAvailability,
+          dateAdded: formattedDate,
+        };
+        await admin.firestore().collection('products').doc(newProductId).set(newProductData);
+
+        // Find the user who has the original productId in their offers
+        const usersCollection = admin.firestore().collection('users');
+        const query = usersCollection.where('offers', 'array-contains', productId);
+        const querySnapshot = await query.get();
+
+        if (!querySnapshot.empty) {
+          const userWithOriginalProduct = querySnapshot.docs[0].data();
+
+          // Update the user and add the new product to their offers
+          const updatedUserOffers = [...userWithOriginalProduct.offers, newProductId];
+          await admin.firestore().collection('users').doc(querySnapshot.docs[0].id).update({ offers: updatedUserOffers });
+        }  
+        res.status(200).json({ message: 'Продуктът е резервиран успешно и създаден нов продукт!' });
+      } else {
+        res.status(200).json({ message: 'Продуктът е резервиран успешно!' });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+  
+  
 }
 
 export default new ProductController();
