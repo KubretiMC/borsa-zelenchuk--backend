@@ -99,10 +99,6 @@ class ProductController {
         reservedCost: parseFloat(reservedCost),
       });
   
-      // Fetch the updated product data
-      const updatedProductSnapshot = await productRef.get();
-      const updatedProductData = updatedProductSnapshot.data();
-  
       // Update the user's reserved products
       const userRef = admin.firestore().collection('users').doc(userId);
       const userDoc = await userRef.get();
@@ -116,10 +112,6 @@ class ProductController {
       const updatedReservedProducts = userData?.userReserved ? [...userData.userReserved, productId] : [productId];
   
       await userRef.update({ userReserved: updatedReservedProducts });
-  
-      // Fetch the updated user data
-      const updatedUserSnapshot = await userRef.get();
-      const updatedUserData = updatedUserSnapshot.data();
 
       // if the new availability is more than the minimum order, we create a new product that can be reserved by the users
       if (updatedAvailability > minimumOrder) {
@@ -158,8 +150,28 @@ class ProductController {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   }
+
+  public async finishProduct(req: Request, res: Response): Promise<void> {
+    try {
+      const { productId: productIdFinishProduct } = req.body;
+      const productRef = admin.firestore().collection('products').doc(productIdFinishProduct);
+      const productDoc = await productRef.get();
   
+      if (!productDoc.exists) {
+        res.status(404).json({ error: 'Продуктът не е намерен!' });
+        return;
+      }
   
+      await productRef.update({
+        finished: true,
+      });
+  
+      res.status(200).json({ message: 'Продуктът е завършен успешно!' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 }
 
 export default new ProductController();
