@@ -5,7 +5,11 @@ import userRoutes from './routes/userRoutes';
 import * as admin from 'firebase-admin';
 import productRoutes from './routes/productRoutes';
 
-const serviceAccount = require('./../../KEYBORSA/key.json');
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+  throw new Error('The FIREBASE_SERVICE_ACCOUNT environment variable is not set.');
+}
+
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 const app = express();
 const port = process.env.PORT || 3001;
