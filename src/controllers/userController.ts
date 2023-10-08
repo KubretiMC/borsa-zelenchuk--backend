@@ -29,7 +29,6 @@ class UserController {
       res.status(201).json({
         id: userId,
         username: userData?.username,
-        password: userData?.password,
         phoneNumber: userData?.phoneNumber,
       });
     } catch (error) {
@@ -59,7 +58,6 @@ class UserController {
       res.status(200).json({
         id: userDoc.id,
         username: userData.username,
-        password: userData.password,
         phoneNumber: userData.phoneNumber,
         offers: userData.offers
       });
@@ -79,8 +77,9 @@ class UserController {
   
       usersQuerySnapshot.forEach((userDoc) => {
         const userData = userDoc.data();
+        const { password, ...otherData } = userData;
         const userId = userDoc.id;
-        usersData.push({ id: userId, ...userData });
+        usersData.push({ id: userId, ...otherData });
       });
   
       res.status(200).json(usersData);
@@ -89,6 +88,31 @@ class UserController {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   }  
+
+  public async updatePassword(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId, currentPassword, newPassword } = req.body;
+      const userRef = admin.firestore().collection('users').doc(userId);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        res.status(404).json({ error: 'Потребителят не е намерен' });
+        return;
+      }
+
+      const userData = userDoc.data();
+      if (userData?.password !== currentPassword) {
+        res.status(400).json({ error: 'Невалидна текуща парола!' });
+        return;
+      }
+      await userRef.update({ password: newPassword });
+
+      res.status(200).json({ message: 'Паролата е сменена успешно!' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 }
 
 export default new UserController();
