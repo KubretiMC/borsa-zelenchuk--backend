@@ -1,3 +1,4 @@
+require('dotenv').config();
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -16,7 +17,7 @@ const port = process.env.PORT || 3001;
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-  });
+});
 
 // Middleware
 app.use(cors());
