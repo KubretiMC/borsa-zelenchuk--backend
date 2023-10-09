@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
 import * as admin from 'firebase-admin';
 
 class UserController {
   public async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { username, password, phoneNumber } = req.body;
-
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
       const userQuerySnapshot = await admin.firestore()
         .collection('users')
         .where('username', '==', username)
@@ -18,7 +20,7 @@ class UserController {
 
       const userRef = await admin.firestore().collection('users').add({
         username,
-        password,
+        password: hashedPassword,
         phoneNumber,
       });
 
@@ -44,7 +46,6 @@ class UserController {
       const userQuerySnapshot = await admin.firestore()
         .collection('users')
         .where('username', '==', username)
-        .where('password', '==', password)
         .get();
 
       if (userQuerySnapshot.empty) {
@@ -55,6 +56,14 @@ class UserController {
       const userDoc = userQuerySnapshot.docs[0];
       const userData = userDoc.data();
 
+      const hashedPassword = userData.password;
+      const passwordMatch = await bcrypt.compare(password, hashedPassword);
+  
+      if (!passwordMatch) {
+        res.status(400).json({ error: 'Грешно потребителско име или парола!' });
+        return;
+      }
+  
       res.status(200).json({
         id: userDoc.id,
         username: userData.username,
