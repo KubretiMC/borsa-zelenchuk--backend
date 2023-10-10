@@ -14,7 +14,7 @@ class UserController {
         .get();
 
       if (!userQuerySnapshot.empty) {
-        res.status(400).json({ error: 'Потребителското име вече съществува!' });
+        res.status(400).json({ error: 'USERNAME_TAKEN' });
         return;
       }
 
@@ -49,7 +49,7 @@ class UserController {
         .get();
 
       if (userQuerySnapshot.empty) {
-        res.status(400).json({ error: 'Грешно потребителско име или парола!' });
+        res.status(400).json({ error: 'USERNAME_PASSWORD_WRONG' });
         return;
       }
 
@@ -60,7 +60,7 @@ class UserController {
       const passwordMatch = await bcrypt.compare(password, hashedPassword);
   
       if (!passwordMatch) {
-        res.status(400).json({ error: 'Грешно потребителско име или парола!' });
+        res.status(400).json({ error: 'USERNAME_PASSWORD_WRONG' });
         return;
       }
   
@@ -105,18 +105,23 @@ class UserController {
       const userDoc = await userRef.get();
 
       if (!userDoc.exists) {
-        res.status(404).json({ error: 'Потребителят не е намерен' });
+        res.status(404).json({ error: 'USER_NOT_FOUND' });
         return;
       }
 
       const userData = userDoc.data();
-      if (userData?.password !== currentPassword) {
-        res.status(400).json({ error: 'Невалидна текуща парола!' });
+
+      const hashedPassword = userData?.password;
+      const passwordMatch = await bcrypt.compare(currentPassword, hashedPassword);
+
+      if (!passwordMatch) {
+        res.status(400).json({ error: 'PASSWORD_INVALID' });
         return;
       }
-      await userRef.update({ password: newPassword });
+      const newHashedPassword = await bcrypt.hash(newPassword, 10);
+      await userRef.update({ password: newHashedPassword });
 
-      res.status(200).json({ message: 'Паролата е сменена успешно!' });
+      res.status(200).json({ message: 'PASSWORD_CHANGED' });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
