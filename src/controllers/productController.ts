@@ -78,14 +78,14 @@ class ProductController {
       const productDoc = await productRef.get();
   
       if (!productDoc.exists) {
-        res.status(404).json({ error: 'Продуктът не е намерен!' });
+        res.status(404).json({ error: 'PRODUCT_NOT_AVAILABLE' });
         return;
       }
   
       const productData = productDoc.data();
   
       if (!productData || productData.reserved) {
-        res.status(400).json({ error: 'Продуктът не е достъпен за резервация!' });
+        res.status(400).json({ error: 'PRODUCT_NOT_AVAILABLE' });
         return;
       }
   
@@ -104,7 +104,7 @@ class ProductController {
       const userDoc = await userRef.get();
   
       if (!userDoc.exists) {
-        res.status(404).json({ error: 'Потребителят не е намерен!' });
+        res.status(404).json({ error: 'USER_NOT_FOUND' });
         return;
       }
   
@@ -141,9 +141,9 @@ class ProductController {
           const updatedUserOffers = [...userWithOriginalProduct.offers, newProductId];
           await admin.firestore().collection('users').doc(querySnapshot.docs[0].id).update({ offers: updatedUserOffers });
         }  
-        res.status(200).json({ message: 'Продуктът е резервиран успешно и създаден нов продукт!' });
+        res.status(200).json({ message: 'PRODUCT_RESERVED_SUCCESSFULLY' });
       } else {
-        res.status(200).json({ message: 'Продуктът е резервиран успешно!' });
+        res.status(200).json({ message: 'PRODUCT_RESERVED_SUCCESSFULLY' });
       }
     } catch (error) {
       console.error(error);
@@ -158,7 +158,7 @@ class ProductController {
       const productDoc = await productRef.get();
   
       if (!productDoc.exists) {
-        res.status(404).json({ error: 'Продуктът не е намерен!' });
+        res.status(404).json({ error: 'PRODUCT_NOT_AVAILABLE' });
         return;
       }
   
@@ -166,7 +166,7 @@ class ProductController {
         finished: true,
       });
   
-      res.status(200).json({ message: 'Продуктът е завършен успешно!' });
+      res.status(200).json({ message: 'PRODUCT_FINISHED_SUCCESSFULLY' });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
