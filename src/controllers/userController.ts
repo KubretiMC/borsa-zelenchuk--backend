@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import * as admin from 'firebase-admin';
+import * as jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 class UserController {
   public async registerUser(req: Request, res: Response): Promise<void> {
@@ -28,10 +30,14 @@ class UserController {
       const userId = userDoc.id;
       const userData = userDoc.data();
 
+      const secretKey = crypto.randomBytes(32).toString('hex');
+      const token = jwt.sign({ userId }, secretKey, { expiresIn: '1h' });
+
       res.status(201).json({
         id: userId,
         username: userData?.username,
         phoneNumber: userData?.phoneNumber,
+        token
       });
     } catch (error) {
       console.error(error);
@@ -63,12 +69,16 @@ class UserController {
         res.status(400).json({ error: 'USERNAME_PASSWORD_WRONG' });
         return;
       }
+
+      const secretKey = crypto.randomBytes(32).toString('hex');
+      const token = jwt.sign({ userId: userDoc.id }, secretKey, { expiresIn: '5m' });
   
       res.status(200).json({
         id: userDoc.id,
         username: userData.username,
         phoneNumber: userData.phoneNumber,
-        offers: userData.offers
+        offers: userData.offers,
+        token
       });
     } catch (error) {
       console.error(error);
