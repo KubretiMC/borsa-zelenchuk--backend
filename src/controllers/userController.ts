@@ -71,7 +71,7 @@ class UserController {
       }
 
       const secretKey = crypto.randomBytes(32).toString('hex');
-      const token = jwt.sign({ userId: userDoc.id }, secretKey, { expiresIn: '1h' });
+      const token = jwt.sign({ userId: userDoc.id }, secretKey, { expiresIn: '5m' });
   
       res.status(200).json({
         id: userDoc.id,
