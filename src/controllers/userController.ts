@@ -30,7 +30,7 @@ class UserController {
       const userId = userDoc.id;
       const userData = userDoc.data();
 
-      const secretKey = crypto.randomBytes(32).toString('hex');
+      const secretKey = process.env.JWT_SECRET_KEY as string;
       const token = jwt.sign({ userId }, secretKey, { expiresIn: '1h' });
 
       res.status(201).json({
@@ -70,7 +70,7 @@ class UserController {
         return;
       }
 
-      const secretKey = crypto.randomBytes(32).toString('hex');
+      const secretKey = process.env.JWT_SECRET_KEY as string;
       const token = jwt.sign({ userId: userDoc.id }, secretKey, { expiresIn: '5m' });
   
       res.status(200).json({

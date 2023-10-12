@@ -25,7 +25,9 @@ class ProductController {
 
   public async addProduct(req: Request, res: Response): Promise<void> {
     try {
-      const { userId, product } = req.body;
+      const userId = req.userId as string;
+      const { product } = req.body;
+      
       const {
         name = '',
         cost = 0,
@@ -62,7 +64,7 @@ class ProductController {
         const updatedOffers = userData?.offers ? [...userData.offers, productId] : [productId];
         await userRef.update({ offers: updatedOffers });
       }
-      res.status(201).json({ id: productId });
+      res.status(201).json({ message: 'OFFER_ADDED_SUCCESSFULLY' });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
