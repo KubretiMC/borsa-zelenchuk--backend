@@ -4,9 +4,9 @@ import { verifyToken } from '../utils/utils';
 
 const router = express.Router();
 
-router.get('/getAllProducts', productController.getAllProducts);
+router.get('/getAllProducts', verifyToken, productController.getAllProducts);
 router.post('/addProduct', verifyToken, productController.addProduct);
-router.post('/reserveProduct', productController.reserveProduct);
-router.post('/finishProduct', productController.finishProduct);
+router.post('/reserveProduct', verifyToken, productController.reserveProduct);
+router.post('/finishProduct', verifyToken, productController.finishProduct);
 
 export default router;
