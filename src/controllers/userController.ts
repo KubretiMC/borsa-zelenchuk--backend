@@ -19,6 +19,16 @@ class UserController {
         return;
       }
 
+      const phoneNumberQuerySnapshot = await admin.firestore()
+        .collection('users')
+        .where('phoneNumber', '==', phoneNumber)
+        .get();
+
+      if (!phoneNumberQuerySnapshot.empty) {
+        res.status(400).json({ error: 'PHONE_NUMBER_TAKEN' });
+        return;
+      }
+
       const userRef = await admin.firestore().collection('users').add({
         username,
         password: hashedPassword,
