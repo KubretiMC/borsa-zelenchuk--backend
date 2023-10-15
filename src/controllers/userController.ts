@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import * as admin from 'firebase-admin';
 import * as jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 
 class UserController {
   public async registerUser(req: Request, res: Response): Promise<void> {
