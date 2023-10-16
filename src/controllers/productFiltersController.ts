@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as admin from 'firebase-admin';
+import { ProductFilter } from '../interfaces/interfaces';
 
 class ProductFiltersController {
   public async getProductFilters(req: Request, res: Response): Promise<void> {
@@ -8,7 +9,7 @@ class ProductFiltersController {
         .collection('productFilters')
         .get();
   
-      const productFiltersData: any[] = productFiltersQuerySnapshot.docs.map(productDoc => productDoc.data());
+      const productFiltersData: ProductFilter[] = productFiltersQuerySnapshot.docs.map(productDoc => productDoc.data() as ProductFilter);
   
       if (productFiltersData.length > 0) {
         res.status(200).json(productFiltersData[0]);
@@ -19,8 +20,7 @@ class ProductFiltersController {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
-  }
-  
+  } 
 }
 
 export default new ProductFiltersController();

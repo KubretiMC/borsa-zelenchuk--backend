@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as admin from 'firebase-admin';
+import { Product } from '../interfaces/interfaces';
 
 class ProductController {
   public async getAllProducts(req: Request, res: Response): Promise<void> {
@@ -8,12 +9,12 @@ class ProductController {
         .collection('products')
         .get();
 
-      const productsData: any[] = [];
+      const productsData: Product[] = [];
 
       productsQuerySnapshot.forEach((productDoc) => {
         const product = productDoc.data();
         const productId = productDoc.id;
-        productsData.push({ id: productId, ...product });
+        productsData.push({ ...product as Product, id: productId });
       });
 
       res.status(200).json(productsData);
